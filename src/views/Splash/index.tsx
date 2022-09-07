@@ -31,11 +31,11 @@ export const Splash = ({ navigation }: TProps): React.ReactElement => {
     if (!realm) {
       return;
     }
-    const data = fetch();
-    if (hasPopulatedData(data)) {
-      return;
-    }
-    populate();
+    // const data = fetch();
+    // if (hasPopulatedData(data)) {
+    //   return;
+    // }
+    // populate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realm]);
 
