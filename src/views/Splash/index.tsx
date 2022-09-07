@@ -1,41 +1,64 @@
 import React, { useEffect } from 'react';
 import { Text, View, Button } from 'react-native';
-import { Results } from 'realm';
+import { Results, BSON } from 'realm';
 import { useRealm } from '../../repositories/items';
-import { TTask } from '../../models/items';
+import { IShopCategory } from '../../models/items';
 import { TProps } from './slash.types';
+import itemsData from '../../../assets/itemsData.json';
+import { ItemsData, LocalizedItemsDatum } from '../../models/data';
 
 export const Splash = ({ navigation }: TProps): React.ReactElement => {
   const { realm } = useRealm();
-  const fetch = (): Results<TTask> | undefined => {
-    const tasks = realm?.objects<TTask>('Task');
-    console.log(1, realm, tasks);
+  const fetch = (): Results<IShopCategory> | undefined => {
+    const tasks = realm?.objects<IShopCategory>('ShopCategory');
     return tasks;
   };
 
-  const hasPopulatedData = (data?: Results<TTask>): boolean =>
+  const hasPopulatedData = (data?: Results<any>): boolean =>
     data ? data.length > 0 : false;
 
   const populate = async () => {
-    let task1;
+    const elements = [];
     realm?.write(() => {
-      task1 = realm.create('Task', {
-        _id: 1,
-        name: 'go grocery shoping',
-        status: 'Open',
-      });
-      console.log(`created a task ${task1.name}`);
+      (itemsData as ItemsData).items.shopcategories.shopcategory.forEach(
+        element => {
+          const ele = realm.create<IShopCategory>('ShopCategory', {
+            _id: new BSON.UUID(),
+            key: element['@id'],
+            localizedKey: { 'EN-US': element['@id'] },
+            value: parseInt(element['@value'], 10),
+            shopsubcategory: element.shopsubcategory.map(sub => ({
+              key: sub['@id'],
+              value: parseInt(sub['@value'], 10),
+              localizedKey: { 'EN-US': sub['@id'] },
+            })),
+          });
+          elements.push(ele);
+        },
+      );
     });
+    console.log(elements.length);
+    // let task1;
+    // realm?.write(() => {
+    //   task1 = realm.create<any>('Task', {
+    //     _id: 1,
+    //     name: 'go grocery shoping',
+    //     status: 'Open',
+    //   });
+    //   console.log(`created a task ${task1.name}`);
+    // });
   };
   useEffect(() => {
     if (!realm) {
       return;
     }
-    // const data = fetch();
-    // if (hasPopulatedData(data)) {
-    //   return;
-    // }
-    // populate();
+    const data = fetch();
+    console.log(data?.map(e => e.key));
+
+    if (hasPopulatedData(data)) {
+      return;
+    }
+    populate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realm]);
 
