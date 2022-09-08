@@ -1,16 +1,18 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, Button } from 'react-native';
 import { Results, BSON } from 'realm';
-import { useRealm } from '../../repositories/items';
 import { IShopCategory } from '../../models/items';
 import { TProps } from './slash.types';
 import itemsData from '../../../assets/itemsData.json';
-import { ItemsData, LocalizedItemsDatum } from '../../models/data';
+import { ItemsData } from '../../models/data';
+import { useRealm } from '../../contexts/realm.context';
 
 export const Splash = ({ navigation }: TProps): React.ReactElement => {
-  const { realm } = useRealm();
+  const realm = useRealm();
+  const [cat, setCat] = useState<Results<IShopCategory>>();
   const fetch = (): Results<IShopCategory> | undefined => {
     const tasks = realm?.objects<IShopCategory>('ShopCategory');
+    setCat(tasks);
     return tasks;
   };
 
@@ -64,7 +66,12 @@ export const Splash = ({ navigation }: TProps): React.ReactElement => {
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ color: 'black' }}>Splash</Text>
+      {cat?.map(c => (
+        <Text key={c._id.id.toString()} style={{ color: 'black' }}>
+          {c.key}
+        </Text>
+      ))}
+
       <Button title="go to main" onPress={() => navigation.navigate('Home')} />
     </View>
   );
