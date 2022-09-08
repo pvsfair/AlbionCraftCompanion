@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Home, Splash } from '../views';
 import { TRootStackParamList } from './routes.types';
 import { RealmProvider } from '../contexts/realm.context';
-import { realmConfig } from '../repositories/items';
+import { realmConfig } from '../models';
 
 const Stack = createNativeStackNavigator<TRootStackParamList>();
 

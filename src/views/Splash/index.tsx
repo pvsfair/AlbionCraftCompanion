@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Text, View, Button } from 'react-native';
 import { Results, BSON } from 'realm';
-import { IShopCategory } from '../../models/items';
 import { TProps } from './slash.types';
 import itemsData from '../../../assets/itemsData.json';
 import { ItemsData } from '../../models/data';
 import { useRealm } from '../../contexts/realm.context';
+import { ShopCategory } from '../../models';
 
 export const Splash = ({ navigation }: TProps): React.ReactElement => {
   const realm = useRealm();
-  const [cat, setCat] = useState<Results<IShopCategory>>();
-  const fetch = (): Results<IShopCategory> | undefined => {
-    const tasks = realm?.objects<IShopCategory>('ShopCategory');
+  const [cat, setCat] = useState<Results<ShopCategory>>();
+  const fetch = (): Results<ShopCategory> | undefined => {
+    const tasks = realm?.objects(ShopCategory);
     setCat(tasks);
     return tasks;
   };
@@ -20,16 +20,17 @@ export const Splash = ({ navigation }: TProps): React.ReactElement => {
     data ? data.length > 0 : false;
 
   const populate = async () => {
+    console.log('populating');
     const elements = [];
     realm?.write(() => {
       (itemsData as ItemsData).items.shopcategories.shopcategory.forEach(
         element => {
-          const ele = realm.create<IShopCategory>('ShopCategory', {
+          const ele = realm.create<ShopCategory>(ShopCategory.tableName, {
             _id: new BSON.UUID(),
             key: element['@id'],
             localizedKey: { 'EN-US': element['@id'] },
             value: parseInt(element['@value'], 10),
-            shopsubcategory: element.shopsubcategory.map(sub => ({
+            subcategories: element.shopsubcategory.map(sub => ({
               key: sub['@id'],
               value: parseInt(sub['@value'], 10),
               localizedKey: { 'EN-US': sub['@id'] },
@@ -40,15 +41,6 @@ export const Splash = ({ navigation }: TProps): React.ReactElement => {
       );
     });
     console.log(elements.length);
-    // let task1;
-    // realm?.write(() => {
-    //   task1 = realm.create<any>('Task', {
-    //     _id: 1,
-    //     name: 'go grocery shoping',
-    //     status: 'Open',
-    //   });
-    //   console.log(`created a task ${task1.name}`);
-    // });
   };
   useEffect(() => {
     if (!realm) {
@@ -67,8 +59,8 @@ export const Splash = ({ navigation }: TProps): React.ReactElement => {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       {cat?.map(c => (
-        <Text key={c._id.id.toString()} style={{ color: 'black' }}>
-          {c.key}
+        <Text key={c._id.id.toString('base64')} style={{ color: 'black' }}>
+          {c.subcategories[0].key}
         </Text>
       ))}
 
