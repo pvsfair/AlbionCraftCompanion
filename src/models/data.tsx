@@ -28,7 +28,7 @@ export interface XML {
 export interface Items {
   '@xmlns:xsi': string;
   '@xsi:noNamespaceSchemaLocation': string;
-  shopcategories: Shopcategories;
+  shopcategories: ShopCategories;
   hideoutitem: Hideoutitem;
   farmableitem: Farmableitem[];
   simpleitem: Simpleitem[];
@@ -1096,14 +1096,18 @@ export interface Mountskin {
   AssetVfxPreset?: AudioInfo;
 }
 
-export interface Shopcategories {
+export interface ShopCategories {
   shopcategory: Shopcategory[];
 }
 
 export interface Shopcategory {
   '@id': string;
   '@value': string;
-  shopsubcategory: { '@id': string; '@value': string }[];
+  shopsubcategory: ShopSubcategory[];
+}
+export interface ShopSubcategory {
+  '@id': string;
+  '@value': string;
 }
 
 export interface Simpleitem {

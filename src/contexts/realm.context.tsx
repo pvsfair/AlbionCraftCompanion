@@ -11,13 +11,26 @@ interface Props {
   children: ReactElement;
   config: Configuration;
 }
-const RealmContext = createContext<Realm | null>(null);
+
+type ctxType = {
+  realm?: Realm;
+};
+const RealmContext = createContext<ctxType>({
+  realm: undefined,
+});
 RealmContext.displayName = 'RealmContext';
 
 const RealmProvider = ({ children, config }: Props) => {
-  const [realm, setRealm] = useState<Realm | null>(null);
+  const [realm, setRealm] = useState<Realm>();
+
+  const [, updateState] = React.useState<object>();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
+
   useEffect(() => {
-    Realm.open(config).then(setRealm);
+    Realm.open(config).then(r => {
+      r.addListener('change', () => forceUpdate());
+      setRealm(r);
+    });
     return () => {
       realm?.close();
     };
@@ -25,13 +38,15 @@ const RealmProvider = ({ children, config }: Props) => {
   }, [config]);
   if (realm) {
     return (
-      <RealmContext.Provider value={realm}>{children}</RealmContext.Provider>
+      <RealmContext.Provider value={{ realm }}>
+        {children}
+      </RealmContext.Provider>
     );
   }
   return null;
 };
 
-const useRealm = (): Realm | null => {
+const useRealm = (): ctxType => {
   const context = useContext(RealmContext);
   if (!context || typeof context === 'undefined') {
     throw new Error('useRealm must be used within a realm provider');

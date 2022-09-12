@@ -1,68 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import { Text, View, Button } from 'react-native';
-import { Results, BSON } from 'realm';
+import React, { useEffect, useMemo } from 'react';
+import { Text, View, Button, FlatList } from 'react-native';
 import { TProps } from './slash.types';
 import itemsData from '../../../assets/itemsData.json';
 import { ItemsData } from '../../models/data';
 import { useRealm } from '../../contexts/realm.context';
-import { ShopCategory } from '../../models';
+import { useShopCategories } from '../../repositories/shopCategories';
 
 export const Splash = ({ navigation }: TProps): React.ReactElement => {
-  const realm = useRealm();
-  const [cat, setCat] = useState<Results<ShopCategory>>();
-  const fetch = (): Results<ShopCategory> | undefined => {
-    const tasks = realm?.objects(ShopCategory);
-    setCat(tasks);
-    return tasks;
-  };
+  const { realm } = useRealm();
+  const { getAll, hasData, populateData } = useShopCategories();
+  const categoriesResult = getAll();
+  const allCats = useMemo(
+    () => categoriesResult?.sorted('key'),
+    [categoriesResult],
+  );
 
-  const hasPopulatedData = (data?: Results<any>): boolean =>
-    data ? data.length > 0 : false;
-
-  const populate = async () => {
-    console.log('populating');
-    const elements = [];
-    realm?.write(() => {
-      (itemsData as ItemsData).items.shopcategories.shopcategory.forEach(
-        element => {
-          const ele = realm.create<ShopCategory>(ShopCategory.tableName, {
-            _id: new BSON.UUID(),
-            key: element['@id'],
-            localizedKey: { 'EN-US': element['@id'] },
-            value: parseInt(element['@value'], 10),
-            subcategories: element.shopsubcategory.map(sub => ({
-              key: sub['@id'],
-              value: parseInt(sub['@value'], 10),
-              localizedKey: { 'EN-US': sub['@id'] },
-            })),
-          });
-          elements.push(ele);
-        },
-      );
-    });
-    console.log(elements.length);
-  };
   useEffect(() => {
     if (!realm) {
       return;
     }
-    const data = fetch();
-    console.log(data?.map(e => e.key));
 
-    if (hasPopulatedData(data)) {
+    if (hasData()) {
       return;
     }
-    populate();
+    populateData((itemsData as ItemsData).items.shopcategories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realm]);
 
+  useEffect(() => {
+    console.log(1, allCats);
+  }, [allCats]);
+
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      {cat?.map(c => (
-        <Text key={c._id.id.toString('base64')} style={{ color: 'black' }}>
-          {c.subcategories[0].key}
-        </Text>
-      ))}
+      <FlatList
+        data={allCats}
+        keyExtractor={c => c._id.id.toString('base64')}
+        renderItem={({ item }) => (
+          <Text style={{ color: 'black' }}>{item.key}</Text>
+        )}
+      />
 
       <Button title="go to main" onPress={() => navigation.navigate('Home')} />
     </View>

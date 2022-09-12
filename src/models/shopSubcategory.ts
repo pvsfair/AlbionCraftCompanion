@@ -13,6 +13,14 @@ export default class ShopSubcategory {
     },
   };
 
+  static generate(id: string, value: string): ShopSubcategory {
+    return {
+      key: id,
+      localizedKey: { 'EN-US': id },
+      value: parseInt(value, 10),
+    };
+  }
+
   key!: string;
   value!: number;
   localizedKey!: Translation;
